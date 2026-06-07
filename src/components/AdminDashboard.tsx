@@ -6,11 +6,13 @@ import { formatTime, formatDate, exportToCSVFile, exportToExcelFile } from "../l
 export function AdminDashboard({ 
   records, 
   onDeleteRecord, 
-  onForceClockOut 
+  onForceClockOut,
+  timezone
 }: { 
   records: PunchRecord[]; 
   onDeleteRecord: (id: string) => void;
   onForceClockOut: (id: string) => void;
+  timezone?: string;
 }) {
   const [adminSearch, setAdminSearch] = useState("");
 
@@ -154,7 +156,7 @@ export function AdminDashboard({
             <div className="flex flex-wrap gap-2.5">
               <button
                 type="button"
-                onClick={() => exportToCSVFile(records)}
+                onClick={() => exportToCSVFile(records, timezone)}
                 className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-950 dark:hover:bg-slate-850 border border-slate-200/50 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
               >
                 <Download className="w-3.5 h-3.5 text-indigo-500" />
@@ -162,8 +164,8 @@ export function AdminDashboard({
               </button>
               <button
                 type="button"
-                onClick={() => exportToExcelFile(records)}
-                className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 shadow-md shadow-indigo-600/10"
+                onClick={() => exportToExcelFile(records, timezone)}
+                className="px-3.5 py-2 rounded-xl bg-indigo-650 hover:bg-indigo-700 text-white text-xs font-bold active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 shadow-md shadow-indigo-600/10"
               >
                 <FileSpreadsheet className="w-3.5 h-3.5" />
                 Export Excel
@@ -209,11 +211,11 @@ export function AdminDashboard({
                           {r.employee_name}
                         </td>
                         <td className="px-4 py-3.5 text-slate-500 font-medium">
-                          {r.date}
+                          {r.clock_in_time ? formatDate(r.clock_in_time, timezone) : r.date}
                         </td>
                         <td className="px-4 py-3.5 font-mono text-slate-600 dark:text-slate-400">
                           <div className="flex flex-col gap-0.5">
-                            <span>In: {formatTime(r.clock_in_time)}</span>
+                            <span>In: {formatTime(r.clock_in_time, timezone)}</span>
                             {activeShift ? (
                               <button
                                 type="button"
@@ -223,7 +225,7 @@ export function AdminDashboard({
                                 Force Clock Out
                               </button>
                             ) : (
-                              <span>Out: {formatTime(r.clock_out_time!)}</span>
+                              <span>Out: {formatTime(r.clock_out_time!, timezone)}</span>
                             )}
                           </div>
                         </td>

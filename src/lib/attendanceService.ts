@@ -339,34 +339,42 @@ export async function forceClockOut(id: string): Promise<PunchRecord | null> {
 }
 
 // Helper formats
-export function formatTime(isoString: string): string {
+export function formatTime(isoString: string, timeZone?: string): string {
   try {
     const d = new Date(isoString);
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+    const options: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+    if (timeZone && timeZone !== "local") {
+      options.timeZone = timeZone;
+    }
+    return d.toLocaleTimeString([], options);
   } catch {
     return isoString;
   }
 }
 
-export function formatDate(isoString: string): string {
+export function formatDate(isoString: string, timeZone?: string): string {
   try {
     const d = new Date(isoString);
-    return d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+    const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' };
+    if (timeZone && timeZone !== "local") {
+      options.timeZone = timeZone;
+    }
+    return d.toLocaleDateString([], options);
   } catch {
     return isoString;
   }
 }
 
 // Export logs to CSV file
-export function exportToCSVFile(records: PunchRecord[]): void {
+export function exportToCSVFile(records: PunchRecord[], timeZone?: string): void {
   const headers = ["ID", "Employee Name", "Date", "Clock In Time", "Clock Out Time", "Total Hours Worked"];
   
   const rows = records.map(r => [
     r.id,
     r.employee_name,
-    r.date,
-    r.clock_in_time ? formatTime(r.clock_in_time) : "",
-    r.clock_out_time ? formatTime(r.clock_out_time) : "STILL CLOCKED IN",
+    r.clock_in_time ? formatDate(r.clock_in_time, timeZone) : r.date,
+    r.clock_in_time ? formatTime(r.clock_in_time, timeZone) : "",
+    r.clock_out_time ? formatTime(r.clock_out_time, timeZone) : "STILL CLOCKED IN",
     r.total_hours !== null ? r.total_hours.toFixed(2) : "0.00"
   ]);
 
@@ -388,15 +396,15 @@ export function exportToCSVFile(records: PunchRecord[]): void {
 }
 
 // Export logs formatted for Excel with UTF-8 BOM
-export function exportToExcelFile(records: PunchRecord[]): void {
+export function exportToExcelFile(records: PunchRecord[], timeZone?: string): void {
   const headers = ["Punch ID", "Employee Name", "Date", "Clock In", "Clock Out", "Hours Worked"];
   
   const rows = records.map(r => [
     r.id,
     r.employee_name,
-    r.date,
-    r.clock_in_time ? formatTime(r.clock_in_time) : "",
-    r.clock_out_time ? formatTime(r.clock_out_time) : "ACTIVE SHIFT",
+    r.clock_in_time ? formatDate(r.clock_in_time, timeZone) : r.date,
+    r.clock_in_time ? formatTime(r.clock_in_time, timeZone) : "",
+    r.clock_out_time ? formatTime(r.clock_out_time, timeZone) : "ACTIVE SHIFT",
     r.total_hours !== null ? r.total_hours.toFixed(2) : "-"
   ]);
 

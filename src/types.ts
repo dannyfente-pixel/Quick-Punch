@@ -13,3 +13,4 @@ export interface AttendanceStats {
   totalHours: number;
   completedShifts: number;
 }
+

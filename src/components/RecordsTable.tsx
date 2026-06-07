@@ -3,7 +3,7 @@ import { Search, RotateCcw, Building2, User, Clock, Calendar, Check, Play } from
 import { PunchRecord } from "../types.ts";
 import { formatTime, formatDate } from "../lib/attendanceService.ts";
 
-export function RecordsTable({ records }: { records: PunchRecord[] }) {
+export function RecordsTable({ records, timezone }: { records: PunchRecord[]; timezone?: string }) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const filtered = records.filter(r => 
@@ -103,14 +103,14 @@ export function RecordsTable({ records }: { records: PunchRecord[] }) {
 
                     {/* Date column */}
                     <td className="px-5 py-4.5 text-xs text-slate-600 dark:text-slate-400 font-semibold text-nowrap">
-                      {formatDate(record.clock_in_time)}
+                      {formatDate(record.clock_in_time, timezone)}
                     </td>
 
                     {/* Clock In column */}
                     <td className="px-5 py-4.5 text-xs font-mono text-slate-700 dark:text-slate-300 text-nowrap">
                       <div className="flex items-center gap-1.5">
                         <Play className="w-3 h-3 text-emerald-500" />
-                        {formatTime(record.clock_in_time)}
+                        {formatTime(record.clock_in_time, timezone)}
                       </div>
                     </td>
 
@@ -123,7 +123,7 @@ export function RecordsTable({ records }: { records: PunchRecord[] }) {
                       ) : (
                         <div className="flex items-center gap-1.5">
                           <Check className="w-3 h-3 text-rose-500" />
-                          {formatTime(record.clock_out_time!)}
+                          {formatTime(record.clock_out_time!, timezone)}
                         </div>
                       )}
                     </td>

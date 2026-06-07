@@ -14,7 +14,8 @@ import {
   Lock, 
   Unlock,
   Building,
-  KeyRound
+  KeyRound,
+  Globe
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Clock } from "./components/Clock.tsx";
@@ -24,6 +25,8 @@ import { RecordsTable } from "./components/RecordsTable.tsx";
 import { AdminDashboard } from "./components/AdminDashboard.tsx";
 import { PunchRecord } from "./types.ts";
 import { getPunches, deletePunch, forceClockOut } from "./lib/attendanceService.ts";
+// @ts-ignore
+import hairSalonBg from "./assets/images/hair_salon_background_1780847414442.png";
 
 export default function App() {
   const [records, setRecords] = useState<PunchRecord[]>([]);
@@ -32,12 +35,15 @@ export default function App() {
     const saved = localStorage.getItem("quickpunch_theme");
     return saved === "dark" || (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches);
   });
+  const [timezone, setTimezone] = useState<string>(() => {
+    return localStorage.getItem("quickpunch_timezone") || "local";
+  });
 
   // PIN code dialog for entering Admin panel
   const [showPinPrompt, setShowPinPrompt] = useState(false);
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState("");
-  const ADMIN_PIN = "1234";
+  const ADMIN_PIN = "4237";
 
   // Load and synchronize state on boots
   const syncRecords = async () => {
@@ -109,8 +115,21 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col font-sans transition-all duration-300">
-      {/* HEADER BAR */}
+    <div className="relative min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col font-sans transition-all duration-300 overflow-x-hidden">
+      {/* Background Salon Image watermark */}
+      <div 
+        className="absolute inset-0 z-0 pointer-events-none opacity-[0.22] dark:opacity-[0.12] transition-all duration-300"
+        style={{
+          backgroundImage: `url(${hairSalonBg})`,
+          backgroundPosition: "center",
+          backgroundSize: "cover",
+          backgroundRepeat: "no-repeat",
+        }}
+      />
+      
+      {/* Content layer */}
+      <div className="relative z-10 flex flex-col min-h-screen w-full">
+        {/* HEADER BAR */}
       <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <Logo />
@@ -166,6 +185,33 @@ export default function App() {
               </button>
             </nav>
 
+            {/* Timezone Selector dropdown */}
+            <div className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 dark:bg-slate-900 border border-slate-200/30 dark:border-slate-800/50 rounded-xl select-none" id="timezone-selector-container">
+              <Globe className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+              <select
+                id="timezone-select"
+                value={timezone}
+                onChange={(e) => {
+                  setTimezone(e.target.value);
+                  localStorage.setItem("quickpunch_timezone", e.target.value);
+                }}
+                className="bg-transparent text-xs font-bold font-sans outline-none cursor-pointer border-none p-0 pr-1 text-slate-700 dark:text-slate-300 antialiased"
+                title="Select Work Shift Timezone"
+              >
+                <option value="local" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans text-xs">🌏 Local Time</option>
+                <option value="UTC" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans text-xs">🌐 UTC Time</option>
+                <option value="Africa/Addis_Ababa" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans text-xs">🇪🇹 Addis Ababa</option>
+                <option value="America/New_York" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans text-xs">🇺🇸 US Eastern</option>
+                <option value="America/Chicago" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans text-xs">🇺🇸 US Central</option>
+                <option value="America/Denver" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans text-xs">🇺🇸 US Mountain</option>
+                <option value="America/Los_Angeles" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans text-xs">🇺🇸 US Pacific</option>
+                <option value="Europe/London" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans text-xs">🇬🇧 London</option>
+                <option value="Europe/Paris" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans text-xs">🇫🇷 Paris</option>
+                <option value="Asia/Dubai" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans text-xs">🇦🇪 Dubai</option>
+                <option value="Asia/Tokyo" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans text-xs">🇯🇵 Tokyo</option>
+              </select>
+            </div>
+
             {/* Dark Mode Switcher */}
             <button
               onClick={() => setDarkMode(!darkMode)}
@@ -193,7 +239,7 @@ export default function App() {
               className="space-y-8"
             >
               {/* Giant Clock Header */}
-              <Clock />
+              <Clock timezone={timezone} />
 
               {/* Central punch panel */}
               <PunchStation onPunchSuccess={syncRecords} />
@@ -209,7 +255,7 @@ export default function App() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <RecordsTable records={records} />
+              <RecordsTable records={records} timezone={timezone} />
             </motion.div>
           )}
 
@@ -226,6 +272,7 @@ export default function App() {
                 records={records}
                 onDeleteRecord={handleDeleteRecord}
                 onForceClockOut={handleForceClockOut}
+                timezone={timezone}
               />
             </motion.div>
           )}
@@ -288,9 +335,7 @@ export default function App() {
                   )}
                 </div>
 
-                <div className="p-3 bg-indigo-50/50 dark:bg-indigo-950/10 border border-indigo-100/30 dark:border-indigo-900/10 rounded-xl text-[11px] text-center font-bold text-slate-500 dark:text-slate-450">
-                  Default Passcode: <span className="text-indigo-600 dark:text-indigo-400 font-mono text-xs font-black">1234</span>
-                </div>
+
 
                 <div className="grid grid-cols-2 gap-3 pt-2">
                   <button
@@ -312,6 +357,7 @@ export default function App() {
           </div>
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 }

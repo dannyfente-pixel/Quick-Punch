@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Clock as ClockIcon, Calendar } from "lucide-react";
 
-export function Clock() {
+export function Clock({ timezone }: { timezone?: string }) {
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
@@ -16,6 +16,7 @@ export function Clock() {
     minute: "2-digit",
     second: "2-digit",
     hour12: true,
+    timeZone: timezone && timezone !== "local" ? timezone : undefined,
   });
 
   const dateStr = time.toLocaleDateString([], {
@@ -23,7 +24,13 @@ export function Clock() {
     month: "long",
     day: "numeric",
     year: "numeric",
+    timeZone: timezone && timezone !== "local" ? timezone : undefined,
   });
+
+  // User-friendly display label for timezones
+  const tzLabel = !timezone || timezone === "local" 
+    ? "Local Time" 
+    : timezone.replace("_", " ").split("/").pop() || timezone;
 
   return (
     <div 
@@ -32,7 +39,7 @@ export function Clock() {
     >
       <div className="flex items-center gap-1.5 px-3 py-1 bg-indigo-50 dark:bg-indigo-950/40 rounded-full border border-indigo-100/50 dark:border-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-mono text-[11px] font-bold uppercase tracking-widest mb-3">
         <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-ping mr-1" />
-        Live Kiosk Time
+        Live Kiosk Time ({tzLabel})
       </div>
 
       {/* Large Digit Clock */}
