@@ -1,0 +1,6 @@
+{
+  "name": "Quick Punch",
+  "description": "A streamlined touch-friendly attendance kiosk for employees to clock in, clock out, and audit work times.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

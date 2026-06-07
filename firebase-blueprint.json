@@ -1,0 +1,45 @@
+{
+  "entities": {
+    "PunchRecord": {
+      "title": "Punch Record",
+      "description": "Represents a single shift block of clock-in and clock-out registrations for an employee.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique punch record ID."
+        },
+        "employee_name": {
+          "type": "string",
+          "description": "Full name of the employee."
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "description": "Date of the punch in YYYY-MM-DD representation."
+        },
+        "clock_in_time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO timestamp representing the clock in event."
+        },
+        "clock_out_time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO timestamp representing the clock out event, or null if active shift."
+        },
+        "total_hours": {
+          "type": "number",
+          "description": "Total decimal duration of the clocked shift, or null if active shift."
+        }
+      },
+      "required": ["id", "employee_name", "date", "clock_in_time"]
+    }
+  },
+  "firestore": {
+    "/punches/{punchId}": {
+      "schema": "PunchRecord",
+      "description": "Master folder containing individual attendance work logs."
+    }
+  }
+}

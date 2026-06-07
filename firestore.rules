@@ -1,0 +1,57 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global Safety Net default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+    
+    // Helpers
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_-]+$');
+    }
+    
+    function incoming() {
+      return request.resource.data;
+    }
+    
+    function existing() {
+      return resource.data;
+    }
+    
+    function isValidPunch(data) {
+      return data.keys().hasAll(['id', 'employee_name', 'date', 'clock_in_time', 'clock_out_time', 'total_hours'])
+        && data.keys().size() == 6
+        && data.id is string && data.id.size() <= 100
+        && data.employee_name is string && data.employee_name.size() > 0 && data.employee_name.size() <= 100
+        && data.date is string && data.date.size() <= 32
+        && data.clock_in_time is string && data.clock_in_time.size() <= 64
+        && (data.clock_out_time == null || (data.clock_out_time is string && data.clock_out_time.size() <= 64))
+        && (data.total_hours == null || (data.total_hours is number && data.total_hours >= 0 && data.total_hours <= 168));
+    }
+    
+    match /punches/{punchId} {
+      allow read: if true;
+      
+      allow create: if isValidId(punchId)
+        && isValidPunch(incoming())
+        && incoming().id == punchId
+        && incoming().clock_out_time == null
+        && incoming().total_hours == null;
+        
+      allow update: if isValidId(punchId)
+        && isValidPunch(incoming())
+        && incoming().id == existing().id
+        && incoming().employee_name == existing().employee_name
+        && incoming().date == existing().date
+        && incoming().clock_in_time == existing().clock_in_time
+        && (
+          // Allow transitions to terminal clock out only
+          (existing().clock_out_time == null && incoming().clock_out_time != null && incoming().total_hours != null)
+        );
+        
+      allow delete: if true;
+    }
+  }
+}
